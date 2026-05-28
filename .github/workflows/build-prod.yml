@@ -1,0 +1,127 @@
+# Сборка и публикация production-образа кастомного форка n8n в GHCR.
+#
+# Зачем отдельный workflow, а не upstream `docker-build-push.yml`:
+#   upstream-пайплайн тянет docker-config.mjs/docker-tags.mjs, blacksmith-
+#   раннеры, DockerHub-секреты, SLSA-provenance и multi-arch манифесты —
+#   для нашего one-mirror деплоя это избыточно. Здесь — минимум: собрать
+#   приложение и запушить single-arch (linux/amd64) образ в GHCR, по той же
+#   схеме, что hermes-api-gateway.
+#
+# Использование на сервере:
+#   docker pull ghcr.io/<owner>/n8n:latest
+#
+# Тегирование:
+#   - latest      — последний успешный билд из master
+#   - sha-<7sym>  — иммутабельный тег по коммиту, удобен для отката
+#     (в prod compose: N8N_IMAGE_TAG=sha-<7sym>)
+#
+# Сборка двухфазная (как в upstream): `pnpm build:n8n` создаёт каталог
+# ./compiled (pruned production deployment), затем docker/images/n8n/Dockerfile
+# копирует ./compiled поверх базового образа n8nio/base.
+
+name: build and push (prod)
+
+env:
+  NODE_VERSION: '24.15.0'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: n8n
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GHCR требует имя образа в lowercase. github.repository_owner может
+      # содержать заглавные буквы — нормализуем через bash `${VAR,,}`.
+      - name: Compute lowercase owner
+        id: owner
+        run: echo "name=${OWNER,,}" >> "$GITHUB_OUTPUT"
+        env:
+          OWNER: ${{ github.repository_owner }}
+
+      # Версия для build-arg / OCI-label. Берём из корневого package.json
+      # ("version") + короткий sha — образ самоидентифицируется при отладке.
+      - name: Compute n8n version
+        id: ver
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          echo "value=${PKG_VERSION}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # node + pnpm + install + `pnpm build:n8n` → каталог ./compiled.
+      # Переиспользуем собственный composite-action форка (тот же, что в
+      # upstream docker-build-push.yml) — единый, проверенный путь сборки.
+      - name: Setup and Build
+        uses: ./.github/actions/setup-nodejs
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          build-command: pnpm build:n8n
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.owner.outputs.name }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/images/n8n/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            N8N_VERSION=${{ steps.ver.outputs.value }}
+            N8N_RELEASE_TYPE=dev
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # Авто-redeploy на prod-сервере (опционально).
+  #
+  # Раскомментировать, когда серверный /usr/local/bin/hermes-redeploy.sh
+  # начнёт принимать аргумент `n8n` (см. api-gateway/.github/workflows/
+  # build-prod.yml — там аналогичный deploy-job со `script: api-gateway`).
+  # До этого образ тянется/перезапускается вручную: `make restart n8n`.
+  #
+  # deploy:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Trigger redeploy on server
+  #       uses: appleboy/ssh-action@v1.2.5
+  #       with:
+  #         host: ${{ secrets.DEPLOY_HOST }}
+  #         username: ${{ secrets.DEPLOY_USER }}
+  #         key: ${{ secrets.DEPLOY_SSH_KEY }}
+  #         port: 22
+  #         command_timeout: 5m
+  #         script: n8n
+  # ============================================================================
