@@ -1,0 +1,3 @@
+ WARN  Unsupported engine: wanted: {"node":">=22.22"} (current: {"node":"v22.14.0","pnpm":"10.32.1"})
+packages/@n8n/benchmark                  |  WARN  Unsupported engine: wanted: {"node":">=22.22"} (current: {"node":"v22.14.0","pnpm":"10.32.1"})
+packages/cli                             |  WARN  Unsupported engine: wanted: {"node":">=22.22"} (current: {"node":"v22.14.0","pnpm":"10.32.1"})

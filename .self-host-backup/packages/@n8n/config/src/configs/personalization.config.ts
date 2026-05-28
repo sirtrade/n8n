@@ -4,5 +4,5 @@ import { Config, Env } from '../decorators';
 export class PersonalizationConfig {
 	/** Whether to enable personalization features. */
 	@Env('N8N_PERSONALIZATION_ENABLED')
-	enabled: boolean = false;
+	enabled: boolean = true;
 }

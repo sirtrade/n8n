@@ -4,7 +4,7 @@ import { Config, Env } from '../decorators';
 export class VersionNotificationsConfig {
 	/** Whether to check for and show in-app notifications about new n8n versions. */
 	@Env('N8N_VERSION_NOTIFICATIONS_ENABLED')
-	enabled: boolean = false;
+	enabled: boolean = true;
 
 	/** URL used to fetch current n8n version information. */
 	@Env('N8N_VERSION_NOTIFICATIONS_ENDPOINT')

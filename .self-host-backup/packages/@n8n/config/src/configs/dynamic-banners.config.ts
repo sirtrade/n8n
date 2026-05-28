@@ -8,5 +8,5 @@ export class DynamicBannersConfig {
 
 	/** Whether to fetch and show dynamic banners (for example, announcements) from the endpoint. */
 	@Env('N8N_DYNAMIC_BANNERS_ENABLED')
-	enabled: boolean = false;
+	enabled: boolean = true;
 }

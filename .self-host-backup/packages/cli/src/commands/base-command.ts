@@ -302,6 +302,25 @@ export abstract class BaseCommand<F = never> {
 		await this.license.init();
 
 		Container.get(LicenseState).setLicenseProvider(this.license);
+
+		const { activationKey } = this.globalConfig.license;
+
+		if (activationKey) {
+			const hasCert = (await this.license.loadCertStr()).length > 0;
+
+			if (hasCert) {
+				return this.logger.debug('Skipping license activation');
+			}
+
+			try {
+				this.logger.debug('Attempting license activation');
+				await this.license.activate(activationKey);
+				this.logger.debug('License init complete');
+			} catch (e: unknown) {
+				const error = ensureError(e);
+				this.logger.error('Could not activate license', { error });
+			}
+		}
 	}
 
 	initWorkflowHistory() {

@@ -15,7 +15,7 @@ class PostHogConfig {
 export class DiagnosticsConfig {
 	/** Whether anonymous diagnostics and telemetry are enabled for this instance. */
 	@Env('N8N_DIAGNOSTICS_ENABLED')
-	enabled: boolean = false;
+	enabled: boolean = true;
 
 	/** Telemetry endpoint config for the frontend (format: key;baseUrl). */
 	@Env('N8N_DIAGNOSTICS_CONFIG_FRONTEND')

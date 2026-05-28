@@ -220,7 +220,7 @@ export class GlobalConfig {
 
 	/** Whether to hide the page that shows active workflows and executions count. */
 	@Env('N8N_HIDE_USAGE_PAGE')
-	hideUsagePage: boolean = true;
+	hideUsagePage: boolean = false;
 
 	/** Number of reverse proxies n8n is running behind. */
 	@Env('N8N_PROXY_HOPS')
