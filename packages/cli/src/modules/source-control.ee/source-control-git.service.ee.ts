@@ -141,6 +141,7 @@ export class SourceControlGitService {
 					'credential.useHttpPath=true',
 				],
 				unsafe: { allowUnsafeCredentialHelper: true },
+				allowEnvironment: ['GIT_TERMINAL_PROMPT'],
 			};
 
 			// Add proxy configuration if proxy environment variables are set
@@ -177,6 +178,7 @@ export class SourceControlGitService {
 			this.git = simpleGit({
 				...this.gitOptions,
 				unsafe: { allowUnsafeSshCommand: true },
+				allowEnvironment: ['GIT_SSH_COMMAND', 'GIT_TERMINAL_PROMPT'],
 			})
 				.env('GIT_SSH_COMMAND', sshCommand)
 				.env('GIT_TERMINAL_PROMPT', '0');

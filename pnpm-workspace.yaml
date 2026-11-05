@@ -108,7 +108,7 @@ catalog:
   reflect-metadata: 0.2.2
   rimraf: 6.0.1
   sass-embedded: ^1.98.0
-  simple-git: 3.36.0
+  simple-git: 4.0.2
   stream-json: 1.9.1
   testcontainers: ^11.13.0
   ts-morph: ^27.0.2
@@ -120,7 +120,7 @@ catalog:
   vite-plugin-dts: ^4.5.4
   vitest: ^4.1.1
   vitest-mock-extended: ^3.1.0
-  vm2: 3.11.5
+  vm2: 3.12.2
   xml2js: 0.6.2
   xss: 1.0.15
   yaml: 2.8.3

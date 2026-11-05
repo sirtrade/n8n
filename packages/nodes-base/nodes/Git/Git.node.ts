@@ -16,7 +16,7 @@ import {
 } from 'n8n-workflow';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import type { LogOptions, SimpleGit, SimpleGitOptions } from 'simple-git';
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 import { URL, fileURLToPath } from 'url';
 
 import {
@@ -472,6 +472,8 @@ export class Git implements INodeType {
 				const gitOptions: Partial<SimpleGitOptions> = {
 					baseDir: operation === 'clone' ? dirname(resolvedRepositoryPath) : resolvedRepositoryPath,
 					config: gitConfig,
+					// simple-git only forwards the environment variables listed here to git
+					allowEnvironment: ['GIT_TERMINAL_PROMPT'],
 					// simple-git blocks callers from setting `core.hooksPath` via `config`
 					// unless this flag is set. We set it deliberately as a mitigation, so
 					// opt in to keep that mitigation working.

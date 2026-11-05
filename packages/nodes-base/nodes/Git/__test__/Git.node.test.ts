@@ -3,7 +3,7 @@ import { Container } from '@n8n/di';
 import { mock } from 'jest-mock-extended';
 import type { IExecuteFunctions } from 'n8n-workflow';
 import type { SimpleGit } from 'simple-git';
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 
 import { Git } from '../Git.node';
 
@@ -139,6 +139,19 @@ describe('Git Node', () => {
 				expect.objectContaining({
 					unsafe: { allowUnsafeHooksPath: true },
 				}),
+			);
+		});
+
+		it('should allow GIT_TERMINAL_PROMPT to reach git', async () => {
+			await gitNode.execute.call(executeFunctions);
+
+			expect(mockSimpleGit).toHaveBeenCalledWith(
+				expect.objectContaining({
+					allowEnvironment: ['GIT_TERMINAL_PROMPT'],
+				}),
+			);
+			expect(mockGit.env).toHaveBeenCalledWith(
+				expect.objectContaining({ GIT_TERMINAL_PROMPT: '0' }),
 			);
 		});
 

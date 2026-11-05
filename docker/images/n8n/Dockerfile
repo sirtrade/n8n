@@ -24,6 +24,8 @@ COPY docker/images/n8n/docker-entrypoint.sh /
 RUN ln -s /usr/local/lib/node_modules/n8n/bin/n8n /usr/local/bin/n8n && \
     mkdir -p /home/node/.n8n && \
     chown -R node:node /home/node && \
+    # Refresh npm bundled with the base image (updates its vendored tar); npm stays: community nodes are installed through it
+    npm install -g npm@latest && \
     rm -rf /root/.npm /tmp/*
 
 EXPOSE 5678/tcp

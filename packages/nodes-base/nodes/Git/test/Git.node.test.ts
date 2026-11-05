@@ -31,10 +31,10 @@ const mockGit = {
 
 jest.mock('simple-git', () => ({
 	__esModule: true,
-	default: jest.fn(() => mockGit),
+	simpleGit: jest.fn(() => mockGit),
 }));
 
-const mockSimpleGit = jest.requireMock<{ default: jest.Mock }>('simple-git').default;
+const mockSimpleGit = jest.requireMock<{ simpleGit: jest.Mock }>('simple-git').simpleGit;
 
 // Mock filesystem operations
 jest.mock('fs/promises', () => ({
